@@ -260,7 +260,7 @@ class SCRController {
     
     //respond with file details
     $res->setFormat("json");
-    $res->add(json_encode(array("status"=>"okay", "title"=>$title, "name"=>$fname, "ext"=> $fext, "sha1"=>$fsha1)));
+    $res->add(json_encode(array("status"=>"okay", "title"=>$ftitle, "name"=>$fname, "ext"=> $fext, "sha1"=>$fsha1)));
     $res->send(200);
     
   }

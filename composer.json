@@ -1,0 +1,6 @@
+{
+  "require": {
+    "zaphpa/zaphpa": "^2.0.0",
+    "firebase/php-jwt": "~1.0"
+  }
+}

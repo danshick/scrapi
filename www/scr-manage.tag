@@ -1,6 +1,12 @@
 <group-list>
   
-  <ul>
+  <form if="{ !loggedIn }" onsubmit={ processLogin } >
+    <input type="text" id="username" placeholder="Username"></input><br/>
+    <input type="password" id="password" placeholder="Password"></input>
+    <input id="login" type="submit" value="Log In"></input>
+  </form>
+  
+  <ul if="{ loggedIn }" >
     <li each="{ g, gobj in groups.list }" >
       <h3>{ g }</h3>
       <ul>
@@ -31,28 +37,42 @@
   <script>
     var tag = this;
     
+    this.loggedIn = false;
     function Login(){
       riot.observable(this);
     
       this.on('getToken', function(){
+        
+        var user = document.getElementById("username").value;
+        var pass = document.getElementById("password").value;
         var client = new XMLHttpRequest();
         client.open("post", "../../scrapi/login", true);
-        client.send(JSON.stringify({username:"admin", password:"test"}));
+        client.send(JSON.stringify({username:user, password:pass}));
         
         client.onreadystatechange = function(){
-          if ( client.readyState == 4 && client.status == 200 ){
-            var res = JSON.parse(client.response);
-            var tomorrow = new Date(Date.now() + 24*60*60 );
-            localStorage.setItem("auth-token", res["auth-token"] );
-            this.cookie="Authorization="+ res["auth-token"] +"; expires="+tomorrow.toUTCString()+"; path=/scrapi";
-            document.cookie = this.cookie;
-            console.log(this.cookie);
+          if ( client.readyState == 4 ){
+            if ( client.status == 200 ){
+              var res = JSON.parse(client.response);
+              var tomorrow = new Date(Date.now() + 24*60*60 );
+              localStorage.setItem("auth-token", res["auth-token"] );
+              this.cookie="Authorization="+ res["auth-token"] +"; expires="+tomorrow.toUTCString()+"; path=/scrapi";
+              document.cookie = this.cookie;
+              tag.loggedIn = true;
+              console.log(this.cookie);
+              tag.update();
+            }
+            else if( client.status == 403 ){
+              
+              humane.log("Login incorrect.", { timeout: 4000, clickToClose: true })
+              
+            }
+              
           }
         }
       });
     }
     this.login = new Login();
-    this.login.trigger('getToken');
+    //this.login.trigger('getToken');
     
     this.groups = new Groups();
     this.groups.trigger('update');
@@ -100,7 +120,14 @@
       }
       
     }
-  
+    
+    processLogin(e){
+      e.stopPropagation();
+      e.preventDefault();
+      tag.login.trigger('getToken');
+      return false;
+    }
+    
     this.dropbox = {};
     
     drag_file(e){

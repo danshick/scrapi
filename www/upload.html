@@ -17,6 +17,20 @@
     <link rel="stylesheet" href="bower_components/skeleton-css/css/skeleton.css">
     
     <style>
+      .content {
+        max-width: 800px;
+        padding: 50px;
+        margin: 0 auto;
+      }
+      .login{
+        
+        width: 500px;
+        margin: 0 auto;
+        
+      }
+      ul{
+        list-style-type: none;
+      }
       .drop_zone{
         border: 2px dashed #BBB;
         border-radius: 5px;
@@ -24,20 +38,18 @@
         text-align: center;
         color: #BBB;
       }
-      ul{
-        list-style-type: none;
-      }
-      
     </style>
   
   </head>
   
   <body>
+  
+    <div class="content">
+      <group-list></group-list>
+    </div>
     
-    <group-list></group-list>
     <script src="scr-manage.tag" type="riot/tag"></script>
     <script src="https://cdn.jsdelivr.net/g/riot@2.0(riot.min.js+compiler.min.js)"></script>
-    
     <script>
       riot.mount('group-list', {});
     </script>

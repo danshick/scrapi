@@ -1,9 +1,9 @@
 <group-list>
   
-  <form if="{ !loggedIn }" onsubmit={ processLogin } >
+  <form class="login" if="{ !loggedIn }" onsubmit={ processLogin } >
     <input type="text" id="username" placeholder="Username"></input><br/>
     <input type="password" id="password" placeholder="Password"></input>
-    <input id="login" type="submit" value="Log In"></input>
+    <input type="submit" value="Log In"></input>
   </form>
   
   <ul if="{ loggedIn }" >

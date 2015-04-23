@@ -112,7 +112,6 @@
       this.on('update', function(){
         var client = new XMLHttpRequest();
         client.open("get", "../../scrapi/group", true);
-        client.setRequestHeader("Authorization", localStorage.getItem("auth-token"));
         client.send();
         
         client.onreadystatechange = function(){
@@ -132,7 +131,6 @@
         this.on('update', function(g){
           var client = new XMLHttpRequest();
           client.open("get", "../../scrapi/group/" + g, true);
-          client.setRequestHeader("Authorization", localStorage.getItem("auth-token"));
           client.send();
 
           client.onreadystatechange = function(){

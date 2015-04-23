@@ -10,12 +10,26 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.2/html5shiv.min.js"></script>
     <script>html5.addElements('todo')</script>
     <![endif]-->
-  
+    <link rel="stylesheet" href="bower_components/skeleton-css/css/normalize.css">
+    <link rel="stylesheet" href="bower_components/skeleton-css/css/skeleton.css">
+    <style>
+      .content {
+        max-width: 800px;
+        padding: 50px;
+        margin: 0 auto;
+      }
+      ul{
+        list-style-type: none;
+      }
+    </style>
+    
   </head>
   
   <body>
     
-    <group-list></group-list>
+    <div class="content">
+      <group-list></group-list>
+    </div>
     <script src="scr-read.tag" type="riot/tag"></script>
     <script src="https://cdn.jsdelivr.net/g/riot@2.0(riot.min.js+compiler.min.js)"></script>
     

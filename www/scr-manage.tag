@@ -13,7 +13,7 @@
         <h3>{ g }</h3>
         <ul>
           <li each="{ f, fobj in gobj }" >
-            { f } - <a href="../../scrapi/group/{ g }/{ f }" >{ fobj.name + '.' + fobj.ext }</a> - SHA1: { fobj.sha1 }
+            { f } - <a href="/scrapi/group/{ g }/{ f }" >{ fobj.name + '.' + fobj.ext }</a> - SHA1: { fobj.sha1 }
           </li>
           <li>
             <div class="drop_zone" id="drop_zone_{ g }" data-group="{ g }" ondrop={ parent.drop_file } ondragover={ parent.drag_file }>
@@ -47,7 +47,7 @@
 
       if(!(localStorage.getItem("auth-token") === null)){
         var client = new XMLHttpRequest();
-        client.open("get", "../../scrapi/checkToken", true);
+        client.open("get", "/scrapi/checkToken", true);
         client.setRequestHeader("Authorization", localStorage.getItem("auth-token"));
         client.send();
         client.onreadystatechange = function(){
@@ -73,7 +73,7 @@
         var user = document.getElementById("username").value;
         var pass = document.getElementById("password").value;
         var client = new XMLHttpRequest();
-        client.open("post", "../../scrapi/login", true);
+        client.open("post", "/scrapi/login", true);
         client.send(JSON.stringify({username:user, password:pass}));
         
         client.onreadystatechange = function(){
@@ -111,7 +111,7 @@
       
       this.on('update', function(){
         var client = new XMLHttpRequest();
-        client.open("get", "../../scrapi/group", true);
+        client.open("get", "/scrapi/group", true);
         client.send();
         
         client.onreadystatechange = function(){
@@ -130,7 +130,7 @@
         
         this.on('update', function(g){
           var client = new XMLHttpRequest();
-          client.open("get", "../../scrapi/group/" + g, true);
+          client.open("get", "/scrapi/group/" + g, true);
           client.send();
 
           client.onreadystatechange = function(){
@@ -197,7 +197,7 @@
       var groupId = e.currentTarget.dataset["group"];
       var client = new XMLHttpRequest();
       
-      client.open("post", "../../scrapi/group/"+ groupId +"/upload", true);
+      client.open("post", "/scrapi/group/"+ groupId +"/upload", true);
       client.setRequestHeader("Content-Type", "application/json");
       client.setRequestHeader("Authorization", localStorage.getItem("auth-token"));
       var objUpload = {};

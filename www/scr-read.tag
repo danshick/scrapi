@@ -5,7 +5,7 @@
       <h3>{ g }</h3>
       <ul>
         <li each="{ f, fobj in gobj }" >
-          { f } - <a href="../../scrapi/group/{ g }/{ f }" >{ fobj.name + '.' + fobj.ext }</a> - SHA1: { fobj.sha1 }
+          { f } - <a href="/scrapi/group/{ g }/{ f }" >{ fobj.name + '.' + fobj.ext }</a> - SHA1: { fobj.sha1 }
         </li>
       </ul>
     </li>
@@ -27,7 +27,7 @@
       
       this.on('update', function(){
         var client = new XMLHttpRequest();
-        client.open("get", "../../scrapi/group", true);
+        client.open("get", "/scrapi/group", true);
         client.send();
         
         client.onreadystatechange = function(){
@@ -46,7 +46,7 @@
         
         this.on('update', function(g){
           var client = new XMLHttpRequest();
-          client.open("get", "../../scrapi/group/" + g, true);
+          client.open("get", "/scrapi/group/" + g, true);
           client.send();
 
           client.onreadystatechange = function(){

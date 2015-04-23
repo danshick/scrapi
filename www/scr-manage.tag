@@ -1,46 +1,73 @@
 <group-list>
-  
-  <form class="login" if="{ !loggedIn }" onsubmit={ processLogin } >
+
+  <form class="login" if="{ auth.loggedIn == 'no' }" onsubmit={ processLogin } >
     <input type="text" id="username" placeholder="Username"></input><br/>
     <input type="password" id="password" placeholder="Password"></input>
     <input type="submit" value="Log In"></input>
   </form>
   
-  <ul if="{ loggedIn }" >
-    <li each="{ g, gobj in groups.list }" >
-      <h3>{ g }</h3>
-      <ul>
-        <li each="{ f, fobj in gobj }" >
-          { f } - <a href="../../scrapi/group/{ g }/{ f }" >{ fobj.name + '.' + fobj.ext }</a> - SHA1: { fobj.sha1 }
-        </li>
-        <li>
-          <div class="drop_zone" id="drop_zone_{ g }" data-group="{ g }" ondrop={ parent.drop_file } ondragover={ parent.drag_file }>
-            <div if="{ parent.dropbox.hasOwnProperty(g) }">
-              <input type="text" id="fileTitle-{ g }" placeholder="Enter document title"></input><br/>
-              Filename: { parent.dropbox[g].name } - 
-              Type: { parent.dropbox[g].type } - 
-              Size: { parent.dropbox[g].size } - 
-              Last Modified Date: { parent.dropbox[g].lastModified } <br/><br/>
-              <input type="button" id="file_{ g }" data-group="{ g }" value="Upload!" onclick={ parent.upload }></input>
+  <div if="{ auth.loggedIn == 'yes' }">
+    <input type="button" id="logout" value="Logout" onclick={ processLogout }></input>
+    <ul>
+      <li each="{ g, gobj in groups.list }" >
+        <h3>{ g }</h3>
+        <ul>
+          <li each="{ f, fobj in gobj }" >
+            { f } - <a href="../../scrapi/group/{ g }/{ f }" >{ fobj.name + '.' + fobj.ext }</a> - SHA1: { fobj.sha1 }
+          </li>
+          <li>
+            <div class="drop_zone" id="drop_zone_{ g }" data-group="{ g }" ondrop={ parent.drop_file } ondragover={ parent.drag_file }>
+              <div if="{ parent.dropbox.hasOwnProperty(g) }">
+                <input type="text" id="fileTitle-{ g }" placeholder="Enter document title"></input><br/>
+                Filename: { parent.dropbox[g].name } - 
+                Type: { parent.dropbox[g].type } - 
+                Size: { parent.dropbox[g].size } - 
+                Last Modified Date: { parent.dropbox[g].lastModified } <br/><br/>
+                <input type="button" id="file_{ g }" data-group="{ g }" value="Upload!" onclick={ parent.upload }></input>
+              </div>
+              
+              <div if="{ !(parent.dropbox.hasOwnProperty(g)) }">
+                "Drop files here"
+              </div>
+              
             </div>
-            
-            <div if="{ !(parent.dropbox.hasOwnProperty(g)) }">
-              "Drop files here"
-            </div>
-            
-          </div>
-        </li>
-      </ul>
-    </li>
-  </ul>
-  
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </div>
   <script>
     var tag = this;
     
-    this.loggedIn = false;
-    function Login(){
+    function Auth(){
+      
+      var thisL = this;
       riot.observable(this);
-    
+      this.loggedIn = "unsure";
+
+      if(!(localStorage.getItem("auth-token") === null)){
+        var client = new XMLHttpRequest();
+        client.open("get", "../../scrapi/checkToken", true);
+        client.setRequestHeader("Authorization", localStorage.getItem("auth-token"));
+        client.send();
+        client.onreadystatechange = function(){
+          if ( client.readyState == 4 ){
+            if( client.status == 200 ){
+              thisL.loggedIn = "yes";
+              tag.update();
+            }
+            else{
+              thisL.loggedIn = "no";
+              tag.update();
+            }
+          }
+        }
+      }
+      else{
+        thisL.loggedIn = "no";
+        tag.update();
+      }
+      
       this.on('getToken', function(){
         
         var user = document.getElementById("username").value;
@@ -57,7 +84,7 @@
               localStorage.setItem("auth-token", res["auth-token"] );
               this.cookie="Authorization="+ res["auth-token"] +"; expires="+tomorrow.toUTCString()+"; path=/scrapi";
               document.cookie = this.cookie;
-              tag.loggedIn = true;
+              thisL.loggedIn = "yes";
               console.log(this.cookie);
               tag.update();
             }
@@ -71,8 +98,7 @@
         }
       });
     }
-    this.login = new Login();
-    //this.login.trigger('getToken');
+    this.auth = new Auth();
     
     this.groups = new Groups();
     this.groups.trigger('update');
@@ -124,7 +150,14 @@
     processLogin(e){
       e.stopPropagation();
       e.preventDefault();
-      tag.login.trigger('getToken');
+      tag.auth.trigger('getToken');
+      return false;
+    }
+    processLogout(e){
+      e.stopPropagation();
+      e.preventDefault();
+      localStorage.removeItem("auth-token");
+      tag.auth.loggedIn = "no";
       return false;
     }
     

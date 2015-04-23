@@ -156,8 +156,8 @@ class SCRController {
     
   }
   
-  //return all file groups as per the listing file
-  public function getGroups($req, $res) {
+  //check if token is still valid
+  public function checkToken($req, $res) {
     
     //check auth, reply 403 and get out if invalid
     if($this->checkJWT() == FALSE){
@@ -166,6 +166,25 @@ class SCRController {
       $res->send(403);
       return ;
     }
+    
+    //token is good
+    $res->setFormat("json");
+    $res->add(json_encode("ok"));
+    $res->send(200);
+    return ;
+    
+  }
+  
+  //return all file groups as per the listing file
+  public function getGroups($req, $res) {
+    
+    //check auth, reply 403 and get out if invalid
+    //if($this->checkJWT() == FALSE){
+    //  $res->setFormat("json");
+    //  $res->add(json_encode(array("error" => "Not authorized")));
+    //  $res->send(403);
+    //  return ;
+    //}
     
     //get listing from catalogue file
     $listing = $this->getListing();
@@ -181,12 +200,12 @@ class SCRController {
   public function getGroup($req, $res) {
     
     //check auth, reply 403 and get out if invalid
-    if($this->checkJWT() == FALSE){
-      $res->setFormat("json");
-      $res->add(json_encode(array("error" => "Not authorized")));
-      $res->send(403);
-      return ;
-    }
+    //if($this->checkJWT() == FALSE){
+    //  $res->setFormat("json");
+    //  $res->add(json_encode(array("error" => "Not authorized")));
+    //  $res->send(403);
+    //  return ;
+    //}
     
     //get group from params
     $gname = $req->params["gname"];
@@ -217,12 +236,12 @@ class SCRController {
   public function getFile($req, $res) {
     
     //check auth, reply 403 and get out if invalid
-    if($this->checkJWT() == FALSE){
-      $res->setFormat("json");
-      $res->add(json_encode(array("error" => "Not authorized")));
-      $res->send(403);
-      return ;
-    }
+    //if($this->checkJWT() == FALSE){
+    //  $res->setFormat("json");
+    //  $res->add(json_encode(array("error" => "Not authorized")));
+    //  $res->send(403);
+    //  return ;
+    //}
     
     //get group and file title from params
     $gname = $req->params["gname"];
@@ -288,7 +307,7 @@ class SCRController {
     $fdata = base64_decode($data["file"]);
     $fsha1 = sha1($fdata);
     $ftitle = preg_replace("/[^a-zA-Z0-9 ]+/", "", urldecode($data["title"]));
-    $ftitle = preg_replace("/[ ]+/", "_", $ftitle);
+    //$ftitle = preg_replace("/[ ]+/", "_", $ftitle);
     $fname = preg_replace("/[^a-zA-Z0-9 ]+/", "", urldecode($data["name"]));
     $fext = preg_replace("/[^a-zA-Z0-9]+/", "", urldecode($data["extension"]));
     
@@ -348,7 +367,7 @@ $router->addRoute(array(
   'path'     => '/scrapi/group/{gname}/{ftitle}',
   'handlers' => array(
     'gname'    => \Zaphpa\Constants::PATTERN_ALPHA, //enforced alphanumeric
-    'ftitle'   => \Zaphpa\Constants::PATTERN_ALPHA, //enforced alphanumeric
+    'ftitle'   => \Zaphpa\Constants::PATTERN_ANY, //enforced alphanumeric
   ),
   'get'      => array('SCRController', 'getFile'),
 ));
@@ -366,6 +385,12 @@ $router->addRoute(array(
 $router->addRoute(array(
   'path'     => '/scrapi/login',
   'post'      => array('SCRController', 'login'),
+));
+
+//router for logging in
+$router->addRoute(array(
+  'path'     => '/scrapi/checkToken',
+  'get'      => array('SCRController', 'checkToken'),
 ));
 
 //try to route request but kick a 404 if the path doesn't exist

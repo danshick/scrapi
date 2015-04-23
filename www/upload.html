@@ -10,13 +10,28 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.2/html5shiv.min.js"></script>
     <script>html5.addElements('todo')</script>
     <![endif]-->
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css">
+    
+    <style>
+      .drop_zone{
+        border: 2px dashed #BBB;
+        border-radius: 5px;
+        padding: 25px;
+        text-align: center;
+        color: #BBB;
+      }
+      ul{
+        list-style-type: none;
+      }
+    </style>
   
   </head>
   
   <body>
     
     <group-list></group-list>
-    <script src="scr-read.tag" type="riot/tag"></script>
+    <script src="scr-manage.tag" type="riot/tag"></script>
     <script src="https://cdn.jsdelivr.net/g/riot@2.0(riot.min.js+compiler.min.js)"></script>
     
     <script>

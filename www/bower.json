@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "dependencies": {
     "humane": "~3.2.2",
-    "skeleton-css": "~2.0.4"
+    "skeleton-css": "~2.0.4",
+    "fontawesome": "~4.3.0"
   },
   "private": true
 }

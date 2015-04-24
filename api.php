@@ -131,6 +131,73 @@ class SCRController {
     
   }
   
+  private function bumpUpAssoc($arr, $key){
+  
+    if(!array_key_exists($key, $arr)){
+      return false;
+    }
+    
+    $newarr = array();
+    $pk=NULL;
+    $pv=NULL;
+    
+    foreach( $arr as $k => $v ){
+      if( !is_null($pk) ){
+        if(strcmp($k, $key) == 0){
+          $newarr[$k] = $v;
+        }
+        else{
+          $newarr[$pk] = $pv;
+          $pk = $k;
+          $pv = $v;
+        }
+      }
+      else{
+        if(strcmp($k, $key) == 0){
+          return $arr;
+        }
+        $pk = $k;
+        $pv = $v;
+      }
+    }
+    $newarr[$pk] = $pv;
+    return $newarr;
+  }
+
+function bumpDownAssoc($arr, $key){
+  
+    if(!array_key_exists($key, $arr)){
+      return false;
+    }
+    
+    $newarr = array();
+    $nk=NULL;
+    $nv=NULL;
+    
+    foreach( $arr as $k => $v ){
+      if( is_null($nk) ){
+        if(strcmp($k, $key) == 0){
+          $nk = $k;
+          $nv = $v;
+        }
+        else{
+          $newarr[$k] = $v;
+        }
+      }
+      else{
+        $newarr[$k] = $v;
+        $newarr[$nk] = $nv;
+        $nk=NULL;
+        $nv=NULL;
+      }
+    }
+    
+    if( !is_null($nk) ){
+      $newarr[$nk] = $nv;
+    }
+    return $newarr;
+  }
+  
   //check credentials and issue a jwt auth token
   public function login($req, $res) {
     
@@ -288,6 +355,135 @@ class SCRController {
     return ;
   }
   
+  public function deleteFile($req, $res) {
+    
+    //check auth, reply 403 and get out if invalid
+    if($this->checkJWT() == FALSE){
+      $res->setFormat("json");
+      $res->add(json_encode(array("error" => "Not authorized")));
+      $res->send(403);
+      return ;
+    }
+    
+    //get group and file title from params
+    $gname = $req->params["gname"];
+    $ftitle = $req->params["ftitle"];
+    
+    //get listing from catalogue file
+    $listing = $this->getListing();
+    
+    //set groupDetail if group exists
+    if( isset($listing[$gname]) ){
+      $groupDetail = $listing[$gname];
+    }
+    //reply 404 with error about non-existent group and get out
+    else{
+      $res->setFormat("json");
+      $res->add(json_encode(array("error" => "Group doesn't exist")));
+      $res->send(404);
+      return ;
+    }
+    
+    //set fileDetail if file exists
+    if( isset($groupDetail[$ftitle]) ){
+      $fileDetail = $groupDetail[$ftitle];
+    }
+    //reply 404 with error about non-existent file and get out
+    else{
+      $res->setFormat("json");
+      $res->add(json_encode(array("error" => "File doesn't exist")));
+      $res->send(404);
+      return ;
+    }
+    
+    if( unlink( "files/".$fileDetail["sha1"].'.'.$fileDetail["ext"] ) ){
+      //remove item from listing
+      unset($listing[$gname][$ftitle]);
+      //write listings back to catalogue
+      $this->setListing($listing);
+      
+      //reply with 200
+      $res->setFormat("json");
+      $res->add(json_encode(array("status"=>"okay")));
+      $res->send(200);
+      return ;
+    }
+    
+    $res->setFormat("json");
+    $res->add(json_encode(array("error"=>"File was not deleted")));
+    $res->send(404);
+    
+    return ;
+    
+  }
+  
+  public function moveFile($req, $res) {
+    
+    //check auth, reply 403 and get out if invalid
+    if($this->checkJWT() == FALSE){
+      $res->setFormat("json");
+      $res->add(json_encode(array("error" => "Not authorized")));
+      $res->send(403);
+      return ;
+    }
+    
+    //get group and file title from params
+    $gname = $req->params["gname"];
+    $ftitle = $req->params["ftitle"];
+    
+    $data = json_decode(array_pop($req->data), true);
+    $action = $data["move"];
+    if( strcmp($action, "up") != 0 && strcmp($action, "down") != 0 ){
+      $res->setFormat("json");
+      $res->add(json_encode(array("error" => "Not a recognized movement")));
+      $res->send(404);
+      return ;
+    }
+    
+    //get listing from catalogue file
+    $listing = $this->getListing();
+    
+    //set groupDetail if group exists
+    if( isset($listing[$gname]) ){
+      $groupDetail = $listing[$gname];
+    }
+    //reply 404 with error about non-existent group and get out
+    else{
+      $res->setFormat("json");
+      $res->add(json_encode(array("error" => "Group doesn't exist")));
+      $res->send(404);
+      return ;
+    }
+    
+    //bump up or down
+    if(strcmp($action, "up") == 0){
+      $groupDetail = $this->bumpUpAssoc($groupDetail, $ftitle);
+    }
+    else{
+      $groupDetail = $this->bumpDownAssoc($groupDetail, $ftitle);
+    }
+    if( $groupDetail == FALSE ){
+      
+      $res->setFormat("json");
+      $res->add(json_encode(array("error" => "File doesn't exist")));
+      $res->send(404);
+      return ;
+      
+    }
+    
+    //update listing
+    $listing[$gname] = $groupDetail;
+    //write listings back to catalogue
+    $this->setListing($listing);
+    
+    //reply with 200
+    $res->setFormat("json");
+    $res->add(json_encode(array("status"=>"okay")));
+    $res->send(200);
+    return ;
+    
+  }
+  
   //upload a file and add it to the listing file
   public function uploadFile($req, $res){
     
@@ -370,6 +566,26 @@ $router->addRoute(array(
     'ftitle'   => \Zaphpa\Constants::PATTERN_ANY, //enforced alphanumeric
   ),
   'get'      => array('SCRController', 'getFile'),
+));
+
+//router for returning a group's file
+$router->addRoute(array(
+  'path'     => '/scrapi/group/{gname}/{ftitle}',
+  'handlers' => array(
+    'gname'    => \Zaphpa\Constants::PATTERN_ALPHA, //enforced alphanumeric
+    'ftitle'   => \Zaphpa\Constants::PATTERN_ANY, //enforced alphanumeric
+  ),
+  'post'      => array('SCRController', 'moveFile'),
+));
+
+//router for returning a group's file
+$router->addRoute(array(
+  'path'     => '/scrapi/group/{gname}/{ftitle}',
+  'handlers' => array(
+    'gname'    => \Zaphpa\Constants::PATTERN_ALPHA, //enforced alphanumeric
+    'ftitle'   => \Zaphpa\Constants::PATTERN_ANY, //enforced alphanumeric
+  ),
+  'delete'      => array('SCRController', 'deleteFile'),
 ));
 
 //router for uploading a file to a group

@@ -14,6 +14,9 @@
         <ul>
           <li each="{ f, fobj in gobj }" >
             { f } - <a href="/scrapi/group/{ g }/{ f }" >{ fobj.name + '.' + fobj.ext }</a> - SHA1: { fobj.sha1 }
+            <i class="fa fa-arrow-up" data-group="{ g }" data-file="{ f }" data-action="up" onclick={ parent.parent.move_file }></i>
+            <i class="fa fa-arrow-down" data-group="{ g }" data-file="{ f }" data-action="down" onclick={ parent.parent.move_file }></i>
+            <i class="fa fa-trash-o" data-group="{ g }" data-file="{ f }" onclick={ parent.parent.delete_file } ></i>
           </li>
           <li>
             <div class="drop_zone" id="drop_zone_{ g }" data-group="{ g }" ondrop={ parent.drop_file } ondragover={ parent.drag_file }>
@@ -162,6 +165,61 @@
       e.preventDefault();
       localStorage.removeItem("auth-token");
       self.auth.loggedIn = "no";
+      return false;
+    }
+    
+    delete_file(e){
+      e.stopPropagation();
+      e.preventDefault();
+
+      var groupId = e.currentTarget.dataset["group"];
+      var fileId = e.currentTarget.dataset["file"];
+      
+      var client = new XMLHttpRequest();
+      
+      client.open("delete", "/scrapi/group/"+ groupId +"/"+ fileId, true);
+      client.setRequestHeader("Content-Type", "application/json");
+      client.setRequestHeader("Authorization", localStorage.getItem("auth-token"));
+      client.send();  /* Send to server */ 
+      /* Check the response status */  
+      client.onreadystatechange = function(){
+        if (client.readyState == 4){
+          if(client.status == 200){
+            self.groups.trigger('update');
+          }
+          else{
+            humane.log("File deletion failed.", { timeout: 4000, clickToClose: true })
+          }
+        }
+      }
+      return false;
+    }
+    
+    move_file(e){
+      e.stopPropagation();
+      e.preventDefault();
+
+      var groupId = e.currentTarget.dataset["group"];
+      var fileId = e.currentTarget.dataset["file"];
+      var direction = e.currentTarget.dataset["action"];
+      
+      var client = new XMLHttpRequest();
+      
+      client.open("post", "/scrapi/group/"+ groupId +"/"+ fileId, true);
+      client.setRequestHeader("Content-Type", "application/json");
+      client.setRequestHeader("Authorization", localStorage.getItem("auth-token"));
+      client.send(JSON.stringify({"move": direction}));  /* Send to server */ 
+      /* Check the response status */  
+      client.onreadystatechange = function(){
+        if (client.readyState == 4){
+          if(client.status == 200){
+            self.groups.trigger('update');
+          }
+          else{
+            humane.log("File move failed.", { timeout: 4000, clickToClose: true })
+          }
+        }
+      }
       return false;
     }
     

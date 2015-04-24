@@ -350,7 +350,7 @@
       var groupId = e.currentTarget.dataset["group"];
       var client = new XMLHttpRequest();
       
-      client.open("post", "/scrapi/group/"+ groupId +"/upload", true);
+      client.open("put", "/scrapi/group/"+ groupId +"/upload", true);
       client.setRequestHeader("Content-Type", "application/json");
       client.setRequestHeader("Authorization", localStorage.getItem("auth-token"));
       var objUpload = {};

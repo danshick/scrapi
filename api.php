@@ -760,7 +760,7 @@ $router->addRoute(array(
   'handlers' => array(
     'gname'         => \Zaphpa\Constants::PATTERN_ALPHA, //enforced alphanumeric
   ),
-  'post'      => array('SCRController', 'uploadFile'),
+  'put'      => array('SCRController', 'uploadFile'),
 ));
 
 //router for logging in

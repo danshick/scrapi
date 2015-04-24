@@ -729,7 +729,7 @@ $router->addRoute(array(
   'path'     => '/scrapi/group/{gname}/{ftitle}',
   'handlers' => array(
     'gname'    => \Zaphpa\Constants::PATTERN_ALPHA, //enforced alphanumeric
-    'ftitle'   => \Zaphpa\Constants::PATTERN_ANY, //enforced alphanumeric
+    'ftitle'   => \Zaphpa\Constants::PATTERN_ANY, //enforced any
   ),
   'get'      => array('SCRController', 'getFile'),
 ));
@@ -739,7 +739,7 @@ $router->addRoute(array(
   'path'     => '/scrapi/group/{gname}/{ftitle}',
   'handlers' => array(
     'gname'    => \Zaphpa\Constants::PATTERN_ALPHA, //enforced alphanumeric
-    'ftitle'   => \Zaphpa\Constants::PATTERN_ANY, //enforced alphanumeric
+    'ftitle'   => \Zaphpa\Constants::PATTERN_ANY, //enforced any
   ),
   'post'      => array('SCRController', 'moveFile'),
 ));
@@ -749,7 +749,7 @@ $router->addRoute(array(
   'path'     => '/scrapi/group/{gname}/{ftitle}',
   'handlers' => array(
     'gname'    => \Zaphpa\Constants::PATTERN_ALPHA, //enforced alphanumeric
-    'ftitle'   => \Zaphpa\Constants::PATTERN_ANY, //enforced alphanumeric
+    'ftitle'   => \Zaphpa\Constants::PATTERN_ANY, //enforced any
   ),
   'delete'      => array('SCRController', 'deleteFile'),
 ));

@@ -131,6 +131,7 @@ class SCRController {
     
   }
   
+  //move an item in an associative array up
   private function bumpUpAssoc($arr, $key){
   
     if(!array_key_exists($key, $arr)){
@@ -164,7 +165,8 @@ class SCRController {
     return $newarr;
   }
 
-function bumpDownAssoc($arr, $key){
+  //move an item in an associative array down
+  private function bumpDownAssoc($arr, $key){
   
     if(!array_key_exists($key, $arr)){
       return false;
@@ -209,9 +211,15 @@ function bumpDownAssoc($arr, $key){
     $user = $data["username"];
     $pass = $data["password"];
     
-    //hardcoded username and password validation
+    //username and password validation
     //403 if wrong
-    if(strcmp($user, "admin") != 0 || strcmp($pass, "test") != 0){
+    global $authCredentials;
+    if( !array_key_exists($user, $authCredentials) ){
+      $res->add(json_encode(array("error" => "Not authorized")));
+      $res->send(403);
+      return ;
+    }
+    if(strcmp($pass, $authCredentials[$user]) != 0){
       $res->add(json_encode(array("error" => "Not authorized")));
       $res->send(403);
       return ;
@@ -299,6 +307,135 @@ function bumpDownAssoc($arr, $key){
 	
   }
   
+  //create a new group
+  public function createGroup($req, $res) {
+    
+    //check auth, reply 403 and get out if invalid
+    if($this->checkJWT() == FALSE){
+      $res->setFormat("json");
+      $res->add(json_encode(array("error" => "Not authorized")));
+      $res->send(403);
+      return ;
+    }
+    
+    //get group and file title from params
+    $gname = $req->params["gname"];
+    
+    //get listing from catalogue file
+    $listing = $this->getListing();
+    
+    //add new group to listing
+    $listing[$gname] = array();
+    
+    //write listings back to catalogue
+    $this->setListing($listing);
+    
+    //reply with 200
+    $res->setFormat("json");
+    $res->add(json_encode(array("status"=>"okay")));
+    $res->send(200);
+    return ;
+    
+  }
+  
+  //remove a group from the a listing
+  public function deleteGroup($req, $res) {
+    
+    //check auth, reply 403 and get out if invalid
+    if($this->checkJWT() == FALSE){
+      $res->setFormat("json");
+      $res->add(json_encode(array("error" => "Not authorized")));
+      $res->send(403);
+      return ;
+    }
+    
+    //get group and file title from params
+    $gname = $req->params["gname"];
+    
+    //get listing from catalogue file
+    $listing = $this->getListing();
+    
+    //set groupDetail if group exists
+    if( !isset($listing[$gname]) ){
+      $res->setFormat("json");
+      $res->add(json_encode(array("error" => "Group doesn't exist")));
+      $res->send(404);
+      return ;
+    }
+    
+    $listing[$gname] = array_filter($listing[$gname]);
+    if( !empty($listing[$gname]) ){
+      $res->setFormat("json");
+      $res->add(json_encode(array("error" => "Group still contains files")));
+      $res->send(404);
+      return ;
+    }
+    
+    //remove group from listing
+    unset($listing[$gname]);
+    //write listing back to catalogue
+    $this->setListing($listing);
+      
+    //reply with 200
+    $res->setFormat("json");
+    $res->add(json_encode(array("status"=>"okay")));
+    $res->send(200);
+    
+    return ;
+    
+  }
+  
+  //move a group up or down in the listing
+  public function moveGroup($req, $res) {
+    
+    //check auth, reply 403 and get out if invalid
+    if($this->checkJWT() == FALSE){
+      $res->setFormat("json");
+      $res->add(json_encode(array("error" => "Not authorized")));
+      $res->send(403);
+      return ;
+    }
+    
+    //get group and file title from params
+    $gname = $req->params["gname"];
+    
+    $data = json_decode(array_pop($req->data), true);
+    $action = $data["move"];
+    if( strcmp($action, "up") != 0 && strcmp($action, "down") != 0 ){
+      $res->setFormat("json");
+      $res->add(json_encode(array("error" => "Not a recognized movement")));
+      $res->send(404);
+      return ;
+    }
+    
+    //get listing from catalogue file
+    $listing = $this->getListing();
+    
+    //bump up or down
+    if(strcmp($action, "up") == 0){
+      $listing = $this->bumpUpAssoc($listing, $gname);
+    }
+    else{
+      $listing = $this->bumpDownAssoc($listing, $gname);
+    }
+    if( $listing == FALSE ){
+      $res->setFormat("json");
+      $res->add(json_encode(array("error" => "Group doesn't exist")));
+      $res->send(404);
+      return ;
+    }
+    
+    //write listings back to catalogue
+    $this->setListing($listing);
+    
+    //reply with 200
+    $res->setFormat("json");
+    $res->add(json_encode(array("status"=>"okay")));
+    $res->send(200);
+    return ;
+    
+  }
+  
   //return a file as per the listing file
   public function getFile($req, $res) {
     
@@ -355,6 +492,7 @@ function bumpDownAssoc($arr, $key){
     return ;
   }
   
+  //remove a file from the disk and from the listing file
   public function deleteFile($req, $res) {
     
     //check auth, reply 403 and get out if invalid
@@ -417,6 +555,7 @@ function bumpDownAssoc($arr, $key){
     
   }
   
+  //move a file up or down in the listing
   public function moveFile($req, $res) {
     
     //check auth, reply 403 and get out if invalid
@@ -558,6 +697,33 @@ $router->addRoute(array(
   'get'      => array('SCRController', 'getGroup'),
 ));
 
+//router for adding a group
+$router->addRoute(array(
+  'path'     => '/scrapi/group/{gname}',
+  'handlers' => array(
+    'gname'         => \Zaphpa\Constants::PATTERN_ALPHA, //enforced alphanumeric
+  ),
+  'put'      => array('SCRController', 'createGroup'),
+));
+
+//router for moving a group
+$router->addRoute(array(
+  'path'     => '/scrapi/group/{gname}',
+  'handlers' => array(
+    'gname'    => \Zaphpa\Constants::PATTERN_ALPHA, //enforced alphanumeric
+  ),
+  'post'      => array('SCRController', 'moveGroup'),
+));
+
+//router for deleting a group
+$router->addRoute(array(
+  'path'     => '/scrapi/group/{gname}',
+  'handlers' => array(
+    'gname'         => \Zaphpa\Constants::PATTERN_ALPHA, //enforced alphanumeric
+  ),
+  'delete'      => array('SCRController', 'deleteGroup'),
+));
+
 //router for returning a group's file
 $router->addRoute(array(
   'path'     => '/scrapi/group/{gname}/{ftitle}',
@@ -568,7 +734,7 @@ $router->addRoute(array(
   'get'      => array('SCRController', 'getFile'),
 ));
 
-//router for returning a group's file
+//router for moving a group's file
 $router->addRoute(array(
   'path'     => '/scrapi/group/{gname}/{ftitle}',
   'handlers' => array(
@@ -578,7 +744,7 @@ $router->addRoute(array(
   'post'      => array('SCRController', 'moveFile'),
 ));
 
-//router for returning a group's file
+//router for deleting a group's file
 $router->addRoute(array(
   'path'     => '/scrapi/group/{gname}/{ftitle}',
   'handlers' => array(
@@ -603,7 +769,7 @@ $router->addRoute(array(
   'post'      => array('SCRController', 'login'),
 ));
 
-//router for logging in
+//router for checking token validity
 $router->addRoute(array(
   'path'     => '/scrapi/checkToken',
   'get'      => array('SCRController', 'checkToken'),

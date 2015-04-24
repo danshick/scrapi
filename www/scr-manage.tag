@@ -10,7 +10,12 @@
     <input type="button" id="logout" value="Logout" onclick={ processLogout }></input>
     <ul>
       <li each="{ g, gobj in groups.list }" >
-        <h3>{ g }</h3>
+        <h3>
+          { g }
+          <i class="fa fa-arrow-up" data-group="{ g }" data-action="up" onclick={ parent.move_group }></i>
+          <i class="fa fa-arrow-down" data-group="{ g }" data-action="down" onclick={ parent.move_group }></i>
+          <i class="fa fa-trash-o" data-group="{ g }" onclick={ parent.delete_group } ></i>
+        </h3>
         <ul>
           <li each="{ f, fobj in gobj }" >
             { f } - <a href="/scrapi/group/{ g }/{ f }" >{ fobj.name + '.' + fobj.ext }</a> - SHA1: { fobj.sha1 }
@@ -36,6 +41,10 @@
             </div>
           </li>
         </ul>
+      </li>
+      <li>
+          <input type="text" class="bigInput" data-edit="newgroup" onkeyup="{ inputEdit }" placeholder="Enter group name"></input>
+          <i class="fa fa-floppy-o" onclick={ create_group }></i>
       </li>
     </ul>
   </div>
@@ -114,6 +123,10 @@
       this.files = new Files();
       
       this.on('update', function(){
+        
+        this.list = {};
+        this.files = new Files();
+        
         var client = new XMLHttpRequest();
         client.open("get", "/scrapi/group", true);
         client.send();
@@ -165,6 +178,82 @@
       e.preventDefault();
       localStorage.removeItem("auth-token");
       self.auth.loggedIn = "no";
+      return false;
+    }
+    
+    delete_group(e){
+      e.stopPropagation();
+      e.preventDefault();
+
+      var groupId = e.currentTarget.dataset["group"];
+      
+      var client = new XMLHttpRequest();
+      
+      client.open("delete", "/scrapi/group/"+ groupId , true);
+      client.setRequestHeader("Content-Type", "application/json");
+      client.setRequestHeader("Authorization", localStorage.getItem("auth-token"));
+      client.send();  /* Send to server */ 
+      /* Check the response status */  
+      client.onreadystatechange = function(){
+        if (client.readyState == 4){
+          if(client.status == 200){
+            self.groups.trigger('update');
+          }
+          else{
+            humane.log("Group deletion failed. Maybe there are still files in it?", { timeout: 4000, clickToClose: true })
+          }
+        }
+      }
+      return false;
+    }
+    
+    move_group(e){
+      e.stopPropagation();
+      e.preventDefault();
+
+      var groupId = e.currentTarget.dataset["group"];
+      var direction = e.currentTarget.dataset["action"];
+      
+      var client = new XMLHttpRequest();
+      
+      client.open("post", "/scrapi/group/"+ groupId , true);
+      client.setRequestHeader("Content-Type", "application/json");
+      client.setRequestHeader("Authorization", localStorage.getItem("auth-token"));
+      client.send(JSON.stringify({"move": direction}));  /* Send to server */ 
+      /* Check the response status */  
+      client.onreadystatechange = function(){
+        if (client.readyState == 4){
+          if(client.status == 200){
+            self.groups.trigger('update');
+          }
+          else{
+            humane.log("Group move failed.", { timeout: 4000, clickToClose: true })
+          }
+        }
+      }
+      return false;
+    }
+    
+    create_group(e){
+      
+      var groupId = self.inputText["newgroup"];
+      var client = new XMLHttpRequest();
+      
+      client.open("put", "/scrapi/group/"+ groupId , true);
+      client.setRequestHeader("Content-Type", "application/json");
+      client.setRequestHeader("Authorization", localStorage.getItem("auth-token"));
+      client.send();  /* Send to server */ 
+      /* Check the response status */  
+      client.onreadystatechange = function(){
+        if (client.readyState == 4){
+          if(client.status == 200){
+            self.groups.trigger('update');
+          }
+          else{
+            humane.log("Group creation failed.", { timeout: 4000, clickToClose: true })
+          }
+        }
+      }
       return false;
     }
     

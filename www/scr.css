@@ -1,0 +1,45 @@
+.content {
+  max-width: 800px;
+  padding: 50px;
+  margin: 0 auto;
+}
+.login{
+  width: 500px;
+  margin: 0 auto;
+}
+#logout{
+  float: right;
+}
+ul{
+  list-style-type: none;
+}
+
+.bigInput{
+  font-size: 3.0rem;
+  line-height: 1.3 !important;
+  height: 100% !important;
+  letter-spacing: -.1rem;
+}
+.drop_zone{
+  border: 2px dashed #BBB;
+  border-radius: 5px;
+  padding: 25px;
+  text-align: center;
+  color: #BBB;
+}
+
+.fa{
+  cursor: pointer;
+}
+li:first-child > .fa-arrow-up{
+  display: none;
+}
+li:nth-last-child(2) > .fa-arrow-down{
+  display: none;
+}
+li:first-child h3 > .fa-arrow-up{
+  display: none;
+}
+li:nth-last-child(2) h3 > .fa-arrow-down{
+  display: none;
+}

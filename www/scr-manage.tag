@@ -1,8 +1,8 @@
 <group-list>
 
   <form class="login" if="{ auth.loggedIn == 'no' }" onsubmit={ processLogin } >
-    <input type="text" id="username" placeholder="Username"></input><br/>
-    <input type="password" id="password" placeholder="Password"></input>
+    <input type="text" id="username" placeholder="Username" data-edit="username" onkeyup="{ inputEdit }" ></input><br/>
+    <input type="password" id="password" placeholder="Password" data-edit="password" onkeyup="{ inputEdit }" ></input>
     <input type="submit" value="Log In"></input>
   </form>
   
@@ -18,7 +18,7 @@
           <li>
             <div class="drop_zone" id="drop_zone_{ g }" data-group="{ g }" ondrop={ parent.drop_file } ondragover={ parent.drag_file }>
               <div if="{ parent.dropbox.hasOwnProperty(g) }">
-                <input type="text" id="fileTitle-{ g }" placeholder="Enter document title"></input><br/>
+                <input type="text" id="fileTitle-{ g }" data-edit="filetitle-{ g }" onkeyup="{ parent.inputEdit }" placeholder="Enter document title"></input><br/>
                 Filename: { parent.dropbox[g].name } - 
                 Type: { parent.dropbox[g].type } - 
                 Size: { parent.dropbox[g].size } - 
@@ -37,7 +37,8 @@
     </ul>
   </div>
   <script>
-    var tag = this;
+    
+    var self = this;
     
     function Auth(){
       
@@ -54,24 +55,24 @@
           if ( client.readyState == 4 ){
             if( client.status == 200 ){
               thisL.loggedIn = "yes";
-              tag.update();
+              self.update();
             }
             else{
               thisL.loggedIn = "no";
-              tag.update();
+              self.update();
             }
           }
         }
       }
       else{
         thisL.loggedIn = "no";
-        tag.update();
+        self.update();
       }
       
       this.on('getToken', function(){
         
-        var user = document.getElementById("username").value;
-        var pass = document.getElementById("password").value;
+        var user = self.inputText["username"];
+        var pass = self.inputText["password"];
         var client = new XMLHttpRequest();
         client.open("post", "/scrapi/login", true);
         client.send(JSON.stringify({username:user, password:pass}));
@@ -86,7 +87,7 @@
               document.cookie = this.cookie;
               thisL.loggedIn = "yes";
               console.log(this.cookie);
-              tag.update();
+              self.update();
             }
             else if( client.status == 403 ){
               
@@ -137,7 +138,7 @@
             if (client.readyState == 4 && client.status == 200){
               var res = JSON.parse(client.response);
               thisG.list[g] = res;
-              tag.update();
+              self.update();
             }
           }
         });
@@ -145,17 +146,22 @@
       
     }
     
+    self.inputText = {};
+    inputEdit(e){
+      self.inputText[e.target.dataset["edit"]] = e.target.value;
+    }
+    
     processLogin(e){
       e.stopPropagation();
       e.preventDefault();
-      tag.auth.trigger('getToken');
+      self.auth.trigger('getToken');
       return false;
     }
     processLogout(e){
       e.stopPropagation();
       e.preventDefault();
       localStorage.removeItem("auth-token");
-      tag.auth.loggedIn = "no";
+      self.auth.loggedIn = "no";
       return false;
     }
     
@@ -182,13 +188,13 @@
       }
       reader.readAsBinaryString(f);
       
-      tag.dropbox[dropboxId] = {};
-      tag.dropbox[dropboxId].name = escape(f.name);
-      tag.dropbox[dropboxId].type = f.type || 'n/a';
-      tag.dropbox[dropboxId].size = f.size;
-      tag.dropbox[dropboxId].lastModified = f.lastModifiedDate.toLocaleDateString() || 'n/a';
+      self.dropbox[dropboxId] = {};
+      self.dropbox[dropboxId].name = escape(f.name);
+      self.dropbox[dropboxId].type = f.type || 'n/a';
+      self.dropbox[dropboxId].size = f.size;
+      self.dropbox[dropboxId].lastModified = f.lastModifiedDate.toLocaleDateString() || 'n/a';
       
-      tag.update();
+      self.update();
       return false;
     }
     
@@ -212,14 +218,14 @@
       }
       objUpload.name = filename;
       objUpload.extension = extension;
-      objUpload.title = document.getElementById("fileTitle-" + groupId).value;
+      objUpload.title = self.inputText["filetitle-" + groupId];
       client.send(JSON.stringify(objUpload));  /* Send to server */ 
          
       /* Check the response status */  
       client.onreadystatechange = function(){
         if (client.readyState == 4 && client.status == 200){
-          delete tag.dropbox[groupId];
-          tag.groups.trigger('update');
+          delete self.dropbox[groupId];
+          self.groups.trigger('update');
         }
       }
       

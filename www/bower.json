@@ -4,7 +4,8 @@
   "dependencies": {
     "humane": "~3.2.2",
     "skeleton-css": "~2.0.4",
-    "fontawesome": "~4.3.0"
+    "fontawesome": "~4.3.0",
+    "riot": "~2.0.15"
   },
   "private": true
 }

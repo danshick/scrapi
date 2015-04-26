@@ -92,7 +92,7 @@
         client.onreadystatechange = function(){
           if ( client.readyState == 4 ){
             if ( client.status == 200 ){
-              var res = JSON.parse(client.response);
+              var res = JSON.parse(client.responseText);
               var tomorrow = new Date(Date.now() + 24*60*60 );
               localStorage.setItem("auth-token", res["auth-token"] );
               this.cookie="Authorization="+ res["auth-token"] +"; expires="+tomorrow.toUTCString()+"; path=/scrapi";
@@ -133,7 +133,7 @@
         
         client.onreadystatechange = function(){
           if (client.readyState == 4 && client.status == 200){
-            var res = JSON.parse(client.response);
+            var res = JSON.parse(client.responseText);
             for( var g in res ){
               thisG.list[res[g]] = {};
               thisG.files.trigger('update', res[g]);
@@ -152,7 +152,7 @@
 
           client.onreadystatechange = function(){
             if (client.readyState == 4 && client.status == 200){
-              var res = JSON.parse(client.response);
+              var res = JSON.parse(client.responseText);
               thisG.list[g] = res;
               self.update();
             }

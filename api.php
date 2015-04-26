@@ -534,23 +534,15 @@ class SCRController {
       return ;
     }
     
-    if( unlink( "files/".$fileDetail["sha1"].'.'.$fileDetail["ext"] ) ){
-      //remove item from listing
-      unset($listing[$gname][$ftitle]);
-      //write listings back to catalogue
-      $this->setListing($listing);
-      
-      //reply with 200
-      $res->setFormat("json");
-      $res->add(json_encode(array("status"=>"okay")));
-      $res->send(200);
-      return ;
-    }
+    //remove item from listing
+    unset($listing[$gname][$ftitle]);
+    //write listings back to catalogue
+    $this->setListing($listing);
     
+    //reply with 200
     $res->setFormat("json");
-    $res->add(json_encode(array("error"=>"File was not deleted")));
-    $res->send(404);
-    
+    $res->add(json_encode(array("status"=>"okay")));
+    $res->send(200);
     return ;
     
   }

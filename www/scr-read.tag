@@ -32,7 +32,7 @@
         
         client.onreadystatechange = function(){
           if (client.readyState == 4 && client.status == 200){
-            var res = JSON.parse(client.response);
+            var res = JSON.parse(client.responseText);
             for( var g in res ){
               thisG.list[res[g]] = {};
               thisG.files.trigger('update', res[g]);
@@ -51,7 +51,7 @@
 
           client.onreadystatechange = function(){
             if (client.readyState == 4 && client.status == 200){
-              var res = JSON.parse(client.response);
+              var res = JSON.parse(client.responseText);
               thisG.list[g] = res;
               tag.update();
             }
